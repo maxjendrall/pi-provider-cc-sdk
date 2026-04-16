@@ -1,12 +1,24 @@
 {
   "name": "pi-provider-cc-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "description": "Use your Claude subscription with pi using their official Claude Code SDK.",
-  "keywords": ["pi-package", "pi", "extension", "claude-code", "claude-agent-sdk"],
+  "keywords": [
+    "pi-package",
+    "pi",
+    "extension",
+    "claude-code",
+    "claude-agent-sdk"
+  ],
   "license": "MIT",
-  "engines": { "node": ">=20" },
-  "files": ["index.ts", "README.md", "LICENSE"],
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "index.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.84",
@@ -24,6 +36,8 @@
     "@types/node": "^24.3.0"
   },
   "pi": {
-    "extensions": ["./index.ts"]
+    "extensions": [
+      "./index.ts"
+    ]
   }
 }
