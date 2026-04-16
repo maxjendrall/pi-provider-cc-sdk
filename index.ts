@@ -35,7 +35,7 @@ const DISALLOWED_BUILTIN_TOOLS = [
 const SDK_TO_PI: Record<string, string> = { read: "read", write: "write", edit: "edit", bash: "bash", grep: "grep", glob: "find" };
 const PI_TO_SDK: Record<string, string> = { read: "Read", write: "Write", edit: "Edit", bash: "Bash", grep: "Grep", find: "Glob", glob: "Glob" };
 
-const LATEST_MODEL_IDS = new Set(["claude-opus-4-6", "claude-sonnet-4-6", "claude-haiku-4-5"]);
+const LATEST_MODEL_IDS = new Set(["claude-opus-4-7", "claude-opus-4-6", "claude-sonnet-4-6", "claude-haiku-4-5"]);
 const MODELS = getModels("anthropic")
 	.filter((m) => LATEST_MODEL_IDS.has(m.id))
 	.map(({ id, name, reasoning, input, cost, contextWindow, maxTokens }) =>
