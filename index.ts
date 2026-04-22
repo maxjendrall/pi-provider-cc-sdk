@@ -21,6 +21,7 @@ import { dirname, join, relative, resolve } from "path";
 const PROVIDER_ID = "claude-sdk";
 const MCP_SERVER_NAME = "custom-tools";
 const MCP_TOOL_PREFIX = `mcp__${MCP_SERVER_NAME}__`;
+const PROMPT_MODE_ENV = "PI_CLAUDE_SDK_PROMPT_MODE";
 
 const DISALLOWED_BUILTIN_TOOLS = [
 	"Read", "Write", "Edit", "Glob", "Grep", "Bash", "Agent",
@@ -161,6 +162,38 @@ function extractSkillsBlock(systemPrompt?: string): string | undefined {
 	const end = systemPrompt.indexOf(endMarker, start);
 	if (end === -1) return undefined;
 	return rewriteSkillsLocations(systemPrompt.slice(start, end + endMarker.length).trim());
+}
+
+function extractSafePiBase(systemPrompt?: string): string | undefined {
+	if (!systemPrompt) return undefined;
+	const markers = [
+		"# Project Context",
+		"The following skills provide specialized instructions for specific tasks.",
+		"Current date:",
+	].map((marker) => systemPrompt.indexOf(marker)).filter((index) => index !== -1);
+	const end = markers.length ? Math.min(...markers) : systemPrompt.length;
+	let base = systemPrompt.slice(0, end).trim();
+	const docsStart = base.indexOf("Pi documentation (read only when the user asks about pi itself, its SDK, extensions, themes, skills, or TUI):");
+	if (docsStart !== -1) {
+		base = base.slice(0, docsStart).trim();
+	}
+	return base || undefined;
+}
+
+type PromptMode = "preset-only" | "safe-pi" | "safe-pi-base" | "safe-pi-no-skills" | "safe-pi-no-agents";
+
+function getPromptMode(): PromptMode {
+	const value = process.env[PROMPT_MODE_ENV]?.trim().toLowerCase();
+	switch (value) {
+		case "preset-only":
+		case "safe-pi":
+		case "safe-pi-base":
+		case "safe-pi-no-skills":
+		case "safe-pi-no-agents":
+			return value;
+		default:
+			return "safe-pi";
+	}
 }
 
 // --- Tool name/arg mapping ---
@@ -619,12 +652,30 @@ function streamSimple(model: Model<any>, ctx: Context, options?: SimpleStreamOpt
 		: userPrompt(ctx.messages) || "[continue]";
 	const effort = options?.reasoning ? EFFORT[options.reasoning] : undefined;
 
-	// Build system prompt append from AGENTS.md + skills
+	// Build system prompt append from a safe subset of pi's system prompt plus on-demand context.
+	// The Claude subscription path accepts pi identity, tools, guidelines, project AGENTS,
+	// and skills, but rejects the built-in Pi documentation block.
+	const promptMode = getPromptMode();
+	const safePiBase = extractSafePiBase(ctx.systemPrompt);
 	const agentsAppend = extractAgentsAppend();
 	const skillsAppend = extractSkillsBlock(ctx.systemPrompt);
-	const appendParts = [agentsAppend, skillsAppend].filter(Boolean);
-	const systemPromptAppend = appendParts.length ? appendParts.join("\n\n") : undefined;
-	const rewriteSkills = Boolean(skillsAppend);
+	const appendParts = (() => {
+		switch (promptMode) {
+			case "preset-only":
+				return [];
+			case "safe-pi-base":
+				return [safePiBase];
+			case "safe-pi-no-skills":
+				return [safePiBase, agentsAppend];
+			case "safe-pi-no-agents":
+				return [safePiBase, skillsAppend];
+			case "safe-pi":
+			default:
+				return [safePiBase, agentsAppend, skillsAppend];
+		}
+	})();
+	const systemPromptAppend = appendParts.filter(Boolean).join("\n\n") || undefined;
+	const rewriteSkills = Boolean(skillsAppend) && promptMode !== "preset-only" && promptMode !== "safe-pi-no-skills";
 
 	const q = query({
 		prompt,
@@ -636,6 +687,7 @@ function streamSimple(model: Model<any>, ctx: Context, options?: SimpleStreamOpt
 			includePartialMessages: true,
 			systemPrompt: {
 				type: "preset", preset: "claude_code",
+				excludeDynamicSections: true,
 				...(systemPromptAppend ? { append: systemPromptAppend } : {}),
 			},
 			extraArgs: { model: model.id },
