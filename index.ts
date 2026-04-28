@@ -36,10 +36,34 @@ const SDK_TO_PI: Record<string, string> = { read: "read", write: "write", edit: 
 const PI_TO_SDK: Record<string, string> = { read: "Read", write: "Write", edit: "Edit", bash: "Bash", grep: "Grep", find: "Glob", glob: "Glob" };
 
 const LATEST_MODEL_IDS = new Set(["claude-opus-4-7", "claude-opus-4-6", "claude-sonnet-4-6", "claude-haiku-4-5"]);
+const DEFAULT_1M_OPUS_MODEL_IDS = new Set(["claude-opus-4-7", "claude-opus-4-6"]);
+
+function uses1mContextByDefault(modelId: string): boolean {
+	const base = modelId.replace(/\[1m\]$/i, "");
+	return DEFAULT_1M_OPUS_MODEL_IDS.has(base);
+}
+
+function toClaudeSdkModelId(modelId: string): string {
+	if (!uses1mContextByDefault(modelId) || /\[1m\]$/i.test(modelId)) return modelId;
+
+	// Claude Code treats the [1m] suffix as the switch for the extended-context
+	// variant. Use the opus alias for the newest Opus so the bundled SDK/CLI can
+	// resolve it to whatever the user's Claude Code currently considers latest.
+	if (modelId === "claude-opus-4-7") return "opus[1m]";
+	return `${modelId}[1m]`;
+}
+
 const MODELS = getModels("anthropic")
 	.filter((m) => LATEST_MODEL_IDS.has(m.id))
-	.map(({ id, name, reasoning, input, cost, contextWindow, maxTokens }) =>
-		({ id, name, reasoning, input, cost, contextWindow, maxTokens }));
+	.map(({ id, name, reasoning, input, cost, contextWindow, maxTokens }) => ({
+		id,
+		name: uses1mContextByDefault(id) && !/1m/i.test(name) ? `${name} (1M context)` : name,
+		reasoning,
+		input,
+		cost,
+		contextWindow: uses1mContextByDefault(id) ? 1_000_000 : contextWindow,
+		maxTokens,
+	}));
 
 const EFFORT: Record<string, EffortLevel> = { minimal: "low", low: "low", medium: "medium", high: "high", xhigh: "max" };
 
@@ -612,7 +636,8 @@ function streamSimple(model: Model<any>, ctx: Context, options?: SimpleStreamOpt
 
 	const { tools, toSdk, toPi } = resolveMcpTools(ctx);
 	const cwd = (options as any)?.cwd ?? process.cwd();
-	const resumeId = syncSession(ctx.messages, cwd, toSdk, model.id);
+	const sdkModelId = toClaudeSdkModelId(model.id);
+	const resumeId = syncSession(ctx.messages, cwd, toSdk, sdkModelId);
 	const imgBlocks = userPromptBlocks(ctx.messages);
 	const prompt: string | AsyncIterable<SDKUserMessage> = imgBlocks
 		? wrapPromptStream(imgBlocks)
@@ -638,7 +663,7 @@ function streamSimple(model: Model<any>, ctx: Context, options?: SimpleStreamOpt
 				type: "preset", preset: "claude_code",
 				...(systemPromptAppend ? { append: systemPromptAppend } : {}),
 			},
-			extraArgs: { model: model.id },
+			extraArgs: { model: sdkModelId },
 			...(effort ? { effort } : {}),
 			...(tools.length ? { mcpServers: buildMcp(tools) } : {}),
 			...(resumeId ? { resume: resumeId } : {}),

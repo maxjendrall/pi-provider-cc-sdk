@@ -1,6 +1,6 @@
 {
   "name": "pi-provider-cc-sdk",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": false,
   "description": "Use your Claude subscription with pi using their official Claude Code SDK.",
   "keywords": [

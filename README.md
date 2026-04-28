@@ -15,3 +15,5 @@ Requires `claude` CLI installed and logged in. Then `/reload` in pi.
 ## Usage
 
 `/model` → select `claude-sdk/claude-opus-4-7`, `claude-sdk/claude-opus-4-6`, `claude-sdk/claude-sonnet-4-6`, or `claude-sdk/claude-haiku-4-5`.
+
+Opus defaults to Claude Code's 1M-context variant when available (`opus[1m]` / `[1m]`).
