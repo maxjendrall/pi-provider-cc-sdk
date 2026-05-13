@@ -55,10 +55,11 @@ function toClaudeSdkModelId(modelId: string): string {
 
 const MODELS = getModels("anthropic")
 	.filter((m) => LATEST_MODEL_IDS.has(m.id))
-	.map(({ id, name, reasoning, input, cost, contextWindow, maxTokens }) => ({
+	.map(({ id, name, reasoning, thinkingLevelMap, input, cost, contextWindow, maxTokens }) => ({
 		id,
 		name: uses1mContextByDefault(id) && !/1m/i.test(name) ? `${name} (1M context)` : name,
 		reasoning,
+		thinkingLevelMap,
 		input,
 		cost,
 		contextWindow: uses1mContextByDefault(id) ? 1_000_000 : contextWindow,
