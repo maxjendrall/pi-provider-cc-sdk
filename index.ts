@@ -66,7 +66,14 @@ const MODELS = getModels("anthropic")
 		maxTokens,
 	}));
 
-const EFFORT: Record<string, EffortLevel> = { minimal: "low", low: "low", medium: "medium", high: "high", xhigh: "max" };
+type ClaudeSdkEffort = EffortLevel | "xhigh";
+const EFFORT: Record<string, ClaudeSdkEffort> = {
+	minimal: "low",
+	low: "medium",
+	medium: "high",
+	high: "xhigh",
+	xhigh: "max",
+};
 
 // Skill alias paths — CC sees ~/.claude/skills, pi stores at ~/.pi/agent/skills
 const SKILLS_ALIAS_GLOBAL = "~/.claude/skills";
@@ -665,7 +672,7 @@ function streamSimple(model: Model<any>, ctx: Context, options?: SimpleStreamOpt
 				...(systemPromptAppend ? { append: systemPromptAppend } : {}),
 			},
 			extraArgs: { model: sdkModelId },
-			...(effort ? { effort } : {}),
+			...(effort ? { effort: effort as EffortLevel } : {}),
 			...(tools.length ? { mcpServers: buildMcp(tools) } : {}),
 			...(resumeId ? { resume: resumeId } : {}),
 		},
