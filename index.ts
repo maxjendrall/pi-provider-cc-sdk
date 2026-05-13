@@ -342,7 +342,7 @@ function syncSession(
 
 // --- MCP bridge state ---
 
-interface McpResult { content: McpContent; isError?: boolean }
+interface McpResult { [key: string]: unknown; content: McpContent; isError?: boolean }
 interface PendingToolCall { resolve: (r: McpResult) => void }
 
 let activeQuery: ReturnType<typeof query> | null = null;
@@ -746,12 +746,14 @@ export default function (pi: ExtensionAPI) {
 		});
 	}
 
-	const clear = () => {
-		if (g[REG_KEY] === streamSimple) g[REG_KEY] = undefined;
+	const resetSessionState = () => {
 		session = null;
 		activeQuery = null;
 	};
-	pi.on("session_switch", clear);
-	pi.on("session_fork", clear);
+	const clear = () => {
+		if (g[REG_KEY] === streamSimple) g[REG_KEY] = undefined;
+		resetSessionState();
+	};
+	pi.on("session_start", resetSessionState);
 	pi.on("session_shutdown", clear);
 }
