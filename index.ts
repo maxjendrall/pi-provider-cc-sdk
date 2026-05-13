@@ -2,8 +2,8 @@ import {
 	calculateCost, createAssistantMessageEventStream, getModels,
 	type AssistantMessage, type AssistantMessageEventStream,
 	type Context, type Model, type SimpleStreamOptions, type Tool,
-} from "@mariozechner/pi-ai";
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+} from "@earendil-works/pi-ai";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import {
 	createSdkMcpServer, query,
 	type EffortLevel, type SDKMessage, type SDKUserMessage,

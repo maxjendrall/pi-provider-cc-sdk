@@ -1,6 +1,6 @@
 {
   "name": "pi-provider-cc-sdk",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": false,
   "description": "Use your Claude subscription with pi using their official Claude Code SDK.",
   "keywords": [
@@ -24,15 +24,15 @@
     "@anthropic-ai/claude-agent-sdk": "^0.2.84",
     "@anthropic-ai/sdk": "^0.73.0",
     "cc-session-io": "^0.1.0",
-    "change-case": "^5.4.4"
+    "change-case": "^5.4.4",
+    "@earendil-works/pi-ai": "^0.74.0",
+    "@earendil-works/pi-coding-agent": "^0.74.0"
   },
   "peerDependencies": {
-    "@mariozechner/pi-ai": "*",
-    "@mariozechner/pi-coding-agent": "*"
+    "@earendil-works/pi-ai": "^0.74.0",
+    "@earendil-works/pi-coding-agent": "^0.74.0"
   },
   "devDependencies": {
-    "@mariozechner/pi-ai": "npm:@earendil-works/pi-ai@^0.74.0",
-    "@mariozechner/pi-coding-agent": "npm:@earendil-works/pi-coding-agent@^0.74.0",
     "@types/node": "^24.3.0"
   },
   "pi": {
